@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { HeroSocialBar } from './components/HeroSocialBar';
 import { FounderSection } from './components/FounderSection';
+import { SectionDividerBanner } from './components/SectionDividerBanner';
 import { PreWeddings } from './components/PreWeddings';
 import { WeddingStoriesSection } from './components/WeddingStoriesSection';
 import { WeddingsGallery } from './components/WeddingsGallery';
@@ -48,7 +49,7 @@ export default function App() {
   const [films, setFilms] = useState<WeddingFilm[]>(initialFilms);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
 
-  // सुरक्षा स्टेट: पासवर्ड लॉक और व्यू टॉगल
+  // Security State: Password Lock & Show/Hide Password
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -131,7 +132,7 @@ export default function App() {
   };
 
   const handleExploreStories = () => {
-    const el = document.getElementById('weddings');
+    const el = document.getElementById('stories');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
@@ -151,7 +152,7 @@ export default function App() {
         image_url: url,
         title: title || 'Curated Frame',
         category: 'WEDDINGS',
-        location: 'Royal Destination',
+        location: '',
         couple_name: '',
         date: '',
         featured: false,
@@ -161,7 +162,7 @@ export default function App() {
     }
   };
 
-  // एडमिन व्यू: पासवर्ड लॉक गार्ड स्क्रीन
+  // एडमिन व्यू: पासवर्ड लॉक स्क्रीन
   if (isAdminView) {
     if (!isAuthenticated) {
       return (
@@ -185,7 +186,7 @@ export default function App() {
               <div>
                 <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1">Admin Username</label>
                 <input
-                  type="email"
+                  type="text"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   placeholder="sen001@gmail.com"
@@ -291,7 +292,38 @@ export default function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 4. Pre-Wedding Stories */}
+        {/* --- 1. STORIES (FULL SCREEN SLOW ZOOM) --- */}
+        <SectionDividerBanner
+          id="stories"
+          title="STORIES"
+          subtitle="THE MOMENTS THAT BECOME MEMORIES"
+          bgImage={stories[0]?.cover_image || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80"}
+        />
+        <WeddingStoriesSection
+          stories={stories}
+          onSelectStory={(story) => setSelectedStory(story)}
+          onBookDate={handleOpenBooking}
+        />
+
+        {/* --- 2. WEDDINGS (FULL SCREEN SLOW ZOOM) --- */}
+        <SectionDividerBanner
+          id="weddings"
+          title="WEDDING"
+          subtitle="THE MOMENTS THAT BECOME MEMORIES"
+          bgImage={photos[0]?.image_url || "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=2000&q=80"}
+        />
+        <WeddingsGallery
+          photos={photos}
+          onOpenPhotoFullscreen={handleOpenPhotoFullscreen}
+        />
+
+        {/* --- 3. PRE-WEDDINGS (FULL SCREEN SLOW ZOOM) --- */}
+        <SectionDividerBanner
+          id="preweddings"
+          title="PRE-WEDDING"
+          subtitle="WHERE EVERY LOVE STORY FINDS ITS RHYTHM"
+          bgImage={preweddings[0]?.cover_image || "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=2000&q=80"}
+        />
         <PreWeddings
           stories={preweddings}
           photos={photos}
@@ -299,20 +331,13 @@ export default function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 5. Wedding Stories */}
-        <WeddingStoriesSection
-          stories={stories}
-          onSelectStory={(story) => setSelectedStory(story)}
-          onBookDate={handleOpenBooking}
+        {/* --- 4. FILMS (FULL SCREEN SLOW ZOOM) --- */}
+        <SectionDividerBanner
+          id="films"
+          title="FILMS"
+          subtitle="REAL MOMENTS. CINEMATIC STORIES."
+          bgImage={films[0]?.thumbnail_url || "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80"}
         />
-
-        {/* 6. Curated Category Portfolio */}
-        <WeddingsGallery
-          photos={photos}
-          onOpenPhotoFullscreen={handleOpenPhotoFullscreen}
-        />
-
-        {/* 7. Cinematic Films */}
         <WeddingFilms films={films} />
 
         {/* 8. Optional Maternity & Heirlooms Section */}
