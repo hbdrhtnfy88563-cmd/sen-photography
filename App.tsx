@@ -37,8 +37,39 @@ import {
   initialHeroImages
 } from './data/defaultData';
 
-export default function App() {
-  // Global Data State
+// फुल-स्क्रीन सिनेमैटिक बैनर
+const SectionBanner: React.FC<{
+  id: string;
+  title: string;
+  subtitle: string;
+  bgImage: string;
+}> = ({ id, title, subtitle, bgImage }) => (
+  <div
+    id={id}
+    className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black select-none"
+  >
+    <img
+      src={bgImage}
+      alt={title}
+      className="absolute inset-0 w-full h-full object-cover brightness-[0.42] contrast-[1.1] animate-ken-burns scale-105"
+    />
+    <div className="relative z-10 text-center px-4 flex flex-col items-center">
+      <p className="text-xs md:text-sm tracking-[0.45em] uppercase text-white/80 font-light mb-4">
+        {subtitle}
+      </p>
+      <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-white tracking-[0.25em] uppercase drop-shadow-2xl mb-6">
+        {title}
+      </h2>
+      <div className="w-20 h-[1px] bg-[#d4af37] mb-6"></div>
+      <p className="text-[10px] tracking-[0.35em] uppercase text-gray-300 font-light">
+        SCROLL TO EXPLORE
+      </p>
+      <div className="w-[1px] h-8 bg-white/40 mt-4 animate-bounce"></div>
+    </div>
+  </div>
+);
+
+function App() {
   const [settings, setSettings] = useState<SiteSettings>(initialSiteSettings);
   const [founder, setFounder] = useState<FounderSettings>(initialFounder);
   const [heroImages, setHeroImages] = useState<HeroImage[]>(initialHeroImages);
@@ -48,7 +79,13 @@ export default function App() {
   const [films, setFilms] = useState<WeddingFilm[]>(initialFilms);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
 
-  // View States
+  // ऑथेंटिकेशन स्टेट
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState('');
+
   const [isAdminView, setIsAdminView] = useState<boolean>(() => {
     return window.location.hash === '#admin' || window.location.pathname.startsWith('/admin');
   });
@@ -56,7 +93,6 @@ export default function App() {
   const [selectedStory, setSelectedStory] = useState<WeddingStory | null>(null);
   const [activePhotoLightbox, setActivePhotoLightbox] = useState<PhotoItem | null>(null);
 
-  // Load latest data from backend API
   const refreshData = async () => {
     try {
       const [s, f, h, pw, st, ph, fl, t] = await Promise.all([
@@ -79,76 +115,123 @@ export default function App() {
       if (Array.isArray(fl)) setFilms(fl);
       if (Array.isArray(t)) setTestimonials(t);
     } catch (err) {
-      console.error('Failed to fetch latest website data from API:', err);
+      console.error('API Error:', err);
     }
   };
 
   useEffect(() => {
     refreshData();
-
     const handleHashChange = () => {
-      if (window.location.hash === '#admin') {
-        setIsAdminView(true);
-      }
+      if (window.location.hash === '#admin') setIsAdminView(true);
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const handleOpenBooking = () => {
-    const el = document.getElementById('contact');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      (loginEmail.trim() === 'sen001@gmail.com' || loginEmail.trim() === 'admin') &&
+      loginPassword === 'Sen@2323'
+    ) {
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('गलत ईमेल या पासवर्ड!');
     }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setIsAdminView(false);
+    window.location.hash = '';
+  };
+
+  const handleOpenBooking = () => {
+    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleExploreStories = () => {
-    const el = document.getElementById('weddings');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById('stories')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleOpenPhotoFullscreen = (photo: PhotoItem) => {
-    setActivePhotoLightbox(photo);
-  };
-
-  const handleOpenPhotoByUrl = (url: string, title: string) => {
-    const existing = photos.find((p) => p.image_url === url);
-    if (existing) {
-      setActivePhotoLightbox(existing);
-    } else {
-      setActivePhotoLightbox({
-        id: `virtual-${Date.now()}`,
-        image_url: url,
-        title: title || 'Curated Frame',
-        category: 'WEDDINGS',
-        location: 'Royal Destination',
-        couple_name: '',
-        date: '',
-        featured: false,
-        sort_order: 0,
-        created_at: new Date().toISOString()
-      });
-    }
-  };
-
-  // If Admin View is active, render dashboard
   if (isAdminView) {
-    return (
-      <AdminDashboard
-        onBackToSite={() => {
-          setIsAdminView(false);
-          window.location.hash = '';
-        }}
-        onRefreshData={refreshData}
-      />
-    );
+    if (!isAuthenticated) {
+      return (
+        <div className="min-h-screen bg-[#0c0c0d] flex items-center justify-center p-4">
+          <div className="bg-[#141416] border border-[#2a2a2e] rounded-xl p-8 max-w-md w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-serif tracking-widest text-[#d4af37] uppercase">SEN PHOTOGRAPHY</h2>
+              <p className="text-xs text-gray-400 mt-1">ADMIN PORTAL</p>
+            </div>
+
+            {loginError && (
+              <div className="bg-red-500/10 border border-red-500/40 text-red-400 text-xs p-3 rounded-lg mb-4 text-center">
+                {loginError}
+              </div>
+            )}
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-1">Username / Email</label>
+                <input
+                  type="text"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="sen001@gmail.com"
+                  required
+                  className="w-full bg-[#1b1b1e] border border-[#2a2a2e] rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#d4af37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase text-gray-400 mb-1">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Sen@2323"
+                    required
+                    className="w-full bg-[#1b1b1e] border border-[#2a2a2e] rounded-lg pl-4 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#d4af37]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#d4af37] text-black font-semibold uppercase tracking-wider py-3 rounded-lg text-xs hover:bg-[#c49f2e]"
+              >
+                Login
+              </button>
+            </form>
+
+            <button
+              onClick={() => {
+                setIsAdminView(false);
+                window.location.hash = '';
+              }}
+              className="mt-4 text-xs text-gray-400 hover:text-white block w-full text-center"
+            >
+              ← Back to Site
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return <AdminDashboard onBackToSite={handleLogout} onRefreshData={refreshData} />;
   }
 
   return (
-    <div className="min-h-screen bg-[#0c0c0d] text-[#e8e4dc] font-sans relative selection:bg-[#d4af37]/30 selection:text-white">
-      {/* Navigation Bar */}
+    <div className="min-h-screen bg-[#0c0c0d] text-[#e8e4dc]">
       <Navbar
         settings={settings}
         onOpenBooking={handleOpenBooking}
@@ -158,9 +241,7 @@ export default function App() {
         }}
       />
 
-      {/* Main Content Flow */}
       <main>
-        {/* 1. Full-Screen Hero (1s Multi-Image Slideshow) */}
         <Hero
           settings={settings}
           heroImages={heroImages}
@@ -168,7 +249,6 @@ export default function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 2. Hero Social Bar (CALL, WHATSAPP, INSTAGRAM directly below Hero) */}
         <HeroSocialBar
           settings={settings}
           phoneNumber={settings?.phoneNumber}
@@ -176,56 +256,69 @@ export default function App() {
           instagramUrl={settings?.instagramUrl}
         />
 
-        {/* 3. Founder Section (BEHIND THE LENS, DIPAK Founder & Lead Cinematographer) */}
-        <FounderSection
-          founder={founder}
+        <FounderSection founder={founder} onBookDate={handleOpenBooking} />
+
+        {/* 1. STORIES BANNER */}
+        <SectionBanner
+          id="stories"
+          title="STORIES"
+          subtitle="THE MOMENTS THAT BECOME MEMORIES"
+          bgImage={stories[0]?.cover_image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80'}
+        />
+        <WeddingStoriesSection
+          stories={stories}
+          onSelectStory={(s) => setSelectedStory(s)}
           onBookDate={handleOpenBooking}
         />
 
-        {/* 4. Pre-Wedding Stories (PRE-WEDDING / THE BEGINNING OF FOREVER) */}
+        {/* 2. WEDDING BANNER */}
+        <SectionBanner
+          id="weddings"
+          title="WEDDING"
+          subtitle="THE MOMENTS THAT BECOME MEMORIES"
+          bgImage={photos[0]?.image_url || 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=2000&q=80'}
+        />
+        <WeddingsGallery
+          photos={photos}
+          onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
+        />
+
+        {/* 3. PRE-WEDDING BANNER */}
+        <SectionBanner
+          id="preweddings"
+          title="PRE-WEDDING"
+          subtitle="WHERE EVERY LOVE STORY FINDS ITS RHYTHM"
+          bgImage={preweddings[0]?.cover_image || 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=2000&q=80'}
+        />
         <PreWeddings
           stories={preweddings}
           photos={photos}
-          onOpenPhotoFullscreen={handleOpenPhotoFullscreen}
+          onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
           onBookDate={handleOpenBooking}
         />
 
-        {/* 5. Wedding Stories (WEDDING / FOREVER BEGINS HERE) */}
-        <WeddingStoriesSection
-          stories={stories}
-          onSelectStory={(story) => setSelectedStory(story)}
-          onBookDate={handleOpenBooking}
+        {/* 4. FILMS BANNER */}
+        <SectionBanner
+          id="films"
+          title="FILMS"
+          subtitle="REAL MOMENTS. CINEMATIC STORIES."
+          bgImage={films[0]?.thumbnail_url || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80'}
         />
-
-        {/* 6. Curated Category Portfolio */}
-        <WeddingsGallery
-          photos={photos}
-          onOpenPhotoFullscreen={handleOpenPhotoFullscreen}
-        />
-
-        {/* 7. Cinematic Films (CINEMATIC FILMS / REAL MOMENTS. CINEMATIC STORIES.) */}
         <WeddingFilms films={films} />
 
-        {/* 8. Optional Maternity & Heirlooms Section */}
         {settings?.maternityKidsEnabled && (
           <MaternityKids
             photos={photos}
-            onOpenPhotoFullscreen={handleOpenPhotoFullscreen}
+            onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
             onBookDate={handleOpenBooking}
           />
         )}
 
-        {/* 9. Instagram Showcase */}
         <InstagramSection settings={settings} />
-
-        {/* 10. Testimonials (WORDS FROM OUR COUPLES) */}
         <Testimonials testimonials={testimonials} />
-
-        {/* 11. Contact & Booking (LET'S CAPTURE YOUR STORY) */}
         <ContactSection settings={settings} />
       </main>
 
-      {/* 12. Footer */}
       <Footer
         settings={settings}
         onNavigateToAdmin={() => {
@@ -234,22 +327,26 @@ export default function App() {
         }}
       />
 
-      {/* Dedicated Wedding Story Lightbox Modal */}
       <StoryModal
         story={selectedStory}
         onClose={() => setSelectedStory(null)}
-        onOpenPhotoFullscreen={handleOpenPhotoByUrl}
-        onPlayFilm={(_videoUrl) => {
-          const filmsSec = document.getElementById('films');
-          if (filmsSec) {
-            setSelectedStory(null);
-            filmsSec.scrollIntoView({ behavior: 'smooth' });
-          }
+        onOpenPhotoFullscreen={(url, title) => {
+          setActivePhotoLightbox({
+            id: `v-${Date.now()}`,
+            image_url: url,
+            title,
+            category: 'WEDDINGS',
+            location: '',
+            couple_name: '',
+            date: '',
+            featured: false,
+            sort_order: 0,
+            created_at: new Date().toISOString()
+          });
         }}
         onBookDate={handleOpenBooking}
       />
 
-      {/* Fullscreen Photo Lightbox */}
       <PhotoLightbox
         currentPhoto={activePhotoLightbox}
         allPhotos={photos}
@@ -259,3 +356,6 @@ export default function App() {
     </div>
   );
 }
+
+// यह लाइन मिसिंग थी जिससे एरर आ रहा था:
+export default App;
