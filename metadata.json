@@ -1,0 +1,6 @@
+{
+  "name": "Sen Photography",
+  "description": "A luxury Indian wedding photography portfolio and cinema studio showcasing royal destination weddings, editorial couple portraits, films, and client management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
