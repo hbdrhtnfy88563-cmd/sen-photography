@@ -2,7 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
-base: '/sen-photography/',
+
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
