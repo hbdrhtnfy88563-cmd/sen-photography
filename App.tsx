@@ -37,7 +37,7 @@ import {
   initialHeroImages
 } from './data/defaultData';
 
-// फुल-स्क्रीन सिनेमैटिक बैनर
+// Ramsnehi Style Full-Screen Cinematic Divider Banner
 const SectionBanner: React.FC<{
   id: string;
   title: string;
@@ -51,17 +51,17 @@ const SectionBanner: React.FC<{
     <img
       src={bgImage}
       alt={title}
-      className="absolute inset-0 w-full h-full object-cover brightness-[0.42] contrast-[1.1] animate-ken-burns scale-105"
+      className="absolute inset-0 w-full h-full object-cover brightness-[0.4] contrast-[1.1] animate-ken-burns"
     />
     <div className="relative z-10 text-center px-4 flex flex-col items-center">
-      <p className="text-xs md:text-sm tracking-[0.45em] uppercase text-white/80 font-light mb-4">
+      <p className="text-[10px] sm:text-xs md:text-sm tracking-[0.45em] uppercase text-white/80 font-light mb-4">
         {subtitle}
       </p>
       <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-white tracking-[0.25em] uppercase drop-shadow-2xl mb-6">
         {title}
       </h2>
-      <div className="w-20 h-[1px] bg-[#d4af37] mb-6"></div>
-      <p className="text-[10px] tracking-[0.35em] uppercase text-gray-300 font-light">
+      <div className="w-16 h-[1px] bg-[#d4af37] mb-6 opacity-75"></div>
+      <p className="text-[9px] sm:text-[10px] tracking-[0.35em] uppercase text-gray-300 font-light">
         SCROLL TO EXPLORE
       </p>
       <div className="w-[1px] h-8 bg-white/40 mt-4 animate-bounce"></div>
@@ -357,5 +357,4 @@ function App() {
   );
 }
 
-// यह लाइन मिसिंग थी जिससे एरर आ रहा था:
 export default App;
