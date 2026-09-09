@@ -46,3 +46,5 @@ export const SectionDividerBanner: React.FC<SectionDividerBannerProps> = ({
     </div>
   );
 };
+
+export default App;
