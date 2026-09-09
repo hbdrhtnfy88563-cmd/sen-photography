@@ -79,3 +79,9 @@
 .animate-ken-burns {
   animation: slowKenBurns 20s ease-in-out infinite alternate;
 }
+
+/* सेरिफ़ मेनू लिंक स्टाइल */
+nav a {
+  font-family: 'Playfair Display', Georgia, serif;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
+}
