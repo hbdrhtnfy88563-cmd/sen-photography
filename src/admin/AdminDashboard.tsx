@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ImageUploadField } from '../components/ImageUploadField';
 import {
   ArrowLeft,
   Upload,
@@ -202,15 +203,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   useEffect(() => {
-    // Verify server session on mount
     api.verifyAuth().then((isValid) => {
       if (isValid) {
         setIsAuthenticated(true);
         sessionStorage.setItem('sen_admin_auth', 'true');
       }
-    }).catch(() => {
-      // Ignore network errors on init
-    });
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -224,7 +222,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setTimeout(() => setStatusMessage(null), 4000);
   };
 
-  // Auth Handler
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -243,7 +240,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     sessionStorage.removeItem('sen_admin_auth');
   };
 
-  // Helper image upload
   const handleFileUpload = async (file: File): Promise<string | null> => {
     setUploadingFile(true);
     try {
@@ -302,7 +298,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [moved] = newList.splice(index, 1);
     newList.splice(targetIdx, 0, moved);
 
-    // Update sort_order numbers
     const reordered = newList.map((img, idx) => ({ ...img, sort_order: idx + 1 }));
     setHeroImages(reordered);
 
@@ -328,24 +323,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const handleUploadHeroDirect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    const url = await handleFileUpload(e.target.files[0]);
-    if (url) {
-      await api.createHeroImage({
-        image_url: url,
-        title: `Hero Slide ${String(heroImages.length + 1).padStart(2, '0')}`,
-        sort_order: heroImages.length + 1,
-        active: true
-      });
-      const updated = await api.getHeroImages();
-      setHeroImages(updated);
-      showStatus('success', 'New slide uploaded and added to slideshow');
-      onRefreshData();
-    }
-    e.target.value = '';
-  };
-
   // ------------------------------------------
   // FOUNDER HANDLERS
   // ------------------------------------------
@@ -355,24 +332,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     try {
       const res = await api.updateFounder(founder);
       setFounder(res);
-      showStatus('success', 'Founder profile and storytelling saved');
+      showStatus('success', 'Founder profile saved');
       onRefreshData();
     } catch {
       showStatus('error', 'Failed to update founder details');
     }
-  };
-
-  const handleFounderPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0] || !founder) return;
-    const url = await handleFileUpload(e.target.files[0]);
-    if (url) {
-      const updated = { ...founder, photo_url: url };
-      setFounder(updated);
-      await api.updateFounder(updated);
-      showStatus('success', 'Founder photograph updated');
-      onRefreshData();
-    }
-    e.target.value = '';
   };
 
   // ------------------------------------------
@@ -559,14 +523,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     try {
       const res = await api.updateSettings(settings);
       setSettings(res);
-      showStatus('success', 'Brand, social channels, and studio details saved');
+      showStatus('success', 'Brand and contact details saved');
       onRefreshData();
     } catch {
       showStatus('error', 'Failed to update settings');
     }
   };
 
-  // If not authenticated, render elegant login form
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#070708] flex items-center justify-center px-4">
@@ -640,7 +603,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-[#070708] text-[#e8e4dc] flex flex-col font-sans">
-      {/* Top Header */}
       <header className="sticky top-0 z-40 bg-[#0e0e11] border-b border-white/10 px-6 py-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center space-x-4">
           <button
@@ -663,7 +625,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="flex items-center space-x-3">
           <button
             onClick={loadData}
-            title="Refresh All Database Records"
+            title="Refresh All Records"
             className="p-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -679,7 +641,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </header>
 
-      {/* Floating Status Notification */}
       {statusMessage && (
         <div
           className={`fixed bottom-6 right-6 z-50 p-4 border flex items-center space-x-3 shadow-2xl transition-all ${
@@ -697,16 +658,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Main Layout: Sidebar & Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Navigation Sidebar */}
         <aside className="w-full md:w-64 bg-[#0a0a0d] border-b md:border-b-0 md:border-r border-white/10 flex-shrink-0 flex md:flex-col justify-between overflow-x-auto md:overflow-y-auto">
           <div className="p-3 md:p-4 space-y-1 flex md:flex-col overflow-x-auto">
             <span className="hidden md:block text-[9px] tracking-[0.3em] uppercase text-white/40 px-3 py-2 font-mono">
               SECTIONS & STORYTELLING
             </span>
 
-            {/* 01. HERO */}
             <button
               onClick={() => setActiveTab('hero_slideshow')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -719,7 +677,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>01. HERO SLIDESHOW ({heroImages.length})</span>
             </button>
 
-            {/* 02. FOUNDER */}
             <button
               onClick={() => setActiveTab('founder')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -732,7 +689,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>02. FOUNDER PROFILE</span>
             </button>
 
-            {/* 03. PRE-WEDDING */}
             <button
               onClick={() => setActiveTab('preweddings')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -745,7 +701,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>03. PRE-WEDDING ({preweddings.length})</span>
             </button>
 
-            {/* 04. WEDDING */}
             <button
               onClick={() => setActiveTab('stories')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -758,7 +713,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>04. WEDDING STORIES ({stories.length})</span>
             </button>
 
-            {/* 05. FILMS */}
             <button
               onClick={() => setActiveTab('films')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -771,7 +725,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>05. CINEMATIC FILMS ({films.length})</span>
             </button>
 
-            {/* 06. MATERNITY & KIDS */}
             <button
               onClick={() => setActiveTab('maternity')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -784,7 +737,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>06. MATERNITY & KIDS</span>
             </button>
 
-            {/* 07. CUSTOMER REVIEWS (RED ACCENT) */}
             <button
               onClick={() => setActiveTab('reviews')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -797,7 +749,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>07. CUSTOMER REVIEWS ({testimonials.length})</span>
             </button>
 
-            {/* 08. CONTACT */}
             <button
               onClick={() => setActiveTab('contact')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -810,7 +761,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>08. STUDIO CONTACT</span>
             </button>
 
-            {/* 09. SOCIAL MEDIA */}
             <button
               onClick={() => setActiveTab('social_media')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -823,7 +773,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>09. SOCIAL MEDIA</span>
             </button>
 
-            {/* 10. WEBSITE TEXT EDITOR */}
             <button
               onClick={() => setActiveTab('website_text')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -836,7 +785,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>10. WEBSITE TEXT EDITOR</span>
             </button>
 
-            {/* 11. SEO SETTINGS */}
             <button
               onClick={() => setActiveTab('seo')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -849,7 +797,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>11. SEO SETTINGS</span>
             </button>
 
-            {/* 12. ADMIN ACCOUNT */}
             <button
               onClick={() => setActiveTab('admin_account')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -862,11 +809,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>12. ADMIN ACCOUNT</span>
             </button>
 
-            <span className="hidden md:block text-[9px] tracking-[0.3em] uppercase text-white/40 px-3 pt-3 pb-1 font-mono">
-              SYSTEM & LEADS
-            </span>
-
-            {/* Enquiries Tab */}
             <button
               onClick={() => setActiveTab('enquiries')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -879,7 +821,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>CLIENT ENQUIRIES ({enquiries.length})</span>
             </button>
 
-            {/* Database Tab */}
             <button
               onClick={() => setActiveTab('database')}
               className={`w-full flex items-center space-x-2.5 px-3 py-2 text-xs tracking-wider uppercase transition-colors whitespace-nowrap ${
@@ -894,11 +835,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </aside>
 
-        {/* Content Viewport */}
         <main className="flex-1 p-6 md:p-10 overflow-y-auto bg-[#070708]">
-          {/* ========================================================================= */}
           {/* TAB 1: HERO SLIDESHOW */}
-          {/* ========================================================================= */}
           {activeTab === 'hero_slideshow' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
@@ -910,50 +848,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     Hero Slideshow Images
                   </h2>
                   <p className="text-xs text-white/50 mt-1">
-                    Manage the multi-image background crossfade behind the hero section. Current interval:{' '}
+                    Multi-image background crossfade behind the hero section. Current interval:{' '}
                     <span className="text-[#d4af37] font-semibold">
                       {(heroInterval / 1000).toFixed(1)}s ({heroInterval}ms)
                     </span>.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    type="file"
-                    ref={heroFileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleUploadHeroDirect}
-                  />
-                  <button
-                    onClick={() => heroFileInputRef.current?.click()}
-                    disabled={uploadingFile}
-                    className="px-4 py-2.5 bg-[#d4af37] hover:bg-[#c49f2b] text-[#0c0c0d] text-xs font-semibold tracking-wider uppercase flex items-center space-x-2 transition-colors"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span>{uploadingFile ? 'UPLOADING...' : 'UPLOAD NEW IMAGE'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setEditingHero(null);
-                      setHeroForm({
-                        image_url: '',
-                        title: `Hero Slide ${String(heroImages.length + 1).padStart(2, '0')}`,
-                        sort_order: heroImages.length + 1,
-                        active: true
-                      });
-                      setHeroModalOpen(true);
-                    }}
-                    className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium tracking-wider uppercase flex items-center space-x-2 border border-white/20 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>ADD VIA URL</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setEditingHero(null);
+                    setHeroForm({
+                      image_url: '',
+                      title: `Hero Slide ${String(heroImages.length + 1).padStart(2, '0')}`,
+                      sort_order: heroImages.length + 1,
+                      active: true
+                    });
+                    setHeroModalOpen(true);
+                  }}
+                  className="px-5 py-2.5 bg-[#d4af37] hover:bg-[#c49f2b] text-[#0c0c0d] text-xs font-semibold tracking-wider uppercase flex items-center space-x-2 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>ADD HERO IMAGE</span>
+                </button>
               </div>
 
-              {/* Slideshow Interval Settings Box */}
+              {/* Slideshow Interval Box */}
               <div className="p-5 bg-[#111114] border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
                   <Clock className="w-5 h-5 text-[#d4af37]" />
@@ -989,14 +909,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Hero Images Grid / List */}
+              {/* Hero Images Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {heroImages.map((img, index) => (
                   <div
                     key={img.id}
                     className="bg-[#111114] border border-white/10 p-4 flex items-center space-x-4 group hover:border-[#d4af37]/40 transition-colors"
                   >
-                    {/* Thumbnail */}
                     <div className="relative w-24 h-20 bg-black/60 shrink-0 overflow-hidden border border-white/10">
                       <img
                         src={img.image_url}
@@ -1008,14 +927,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </span>
                     </div>
 
-                    {/* Details */}
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs text-white font-medium truncate">
                         {img.title || `Hero Image ${String(index + 1).padStart(2, '0')}`}
                       </h4>
-                      <p className="text-[10px] text-white/40 truncate mt-0.5 font-mono">
-                        {img.image_url}
-                      </p>
                       <div className="flex items-center space-x-2 mt-2">
                         <span
                           className={`text-[9px] px-2 py-0.5 uppercase tracking-wider ${
@@ -1029,7 +944,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                     </div>
 
-                    {/* Action buttons */}
                     <div className="flex items-center space-x-1 shrink-0">
                       <button
                         onClick={() => handleMoveHero(index, 'up')}
@@ -1080,9 +994,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 2: FOUNDER SETTINGS */}
-          {/* ========================================================================= */}
+          {/* TAB 2: FOUNDER */}
           {activeTab === 'founder' && founder && (
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="pb-6 border-b border-white/10">
@@ -1092,60 +1004,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <h2 className="font-serif text-3xl text-white font-light mt-1">
                   Founder Profile & Storytelling
                 </h2>
-                <p className="text-xs text-white/50 mt-1">
-                  Control the founder's photograph, title, design philosophy, and artistic background shown in the "BEHIND THE LENS" section.
-                </p>
               </div>
 
               <form onSubmit={handleSaveFounder} className="space-y-6">
-                {/* Photo Upload & Preview Card */}
-                <div className="p-6 bg-[#111114] border border-white/10 flex flex-col sm:flex-row items-center gap-6">
-                  <div className="w-32 h-40 bg-black/60 border border-white/15 overflow-hidden shrink-0 shadow-lg">
-                    <img
-                      src={founder.photo_url}
-                      alt={founder.name}
-                      className="w-full h-full object-cover object-top"
-                    />
-                  </div>
-
-                  <div className="space-y-3 flex-1 text-center sm:text-left">
-                    <h4 className="text-xs tracking-wider uppercase text-white font-semibold">
-                      Founder Photograph
-                    </h4>
-                    <p className="text-xs text-white/50">
-                      Recommended: High resolution vertical portrait (3:4 ratio) in elegant attire or behind cinema camera.
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-3 pt-1">
-                      <input
-                        type="file"
-                        ref={founderFileInputRef}
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFounderPhotoUpload}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => founderFileInputRef.current?.click()}
-                        disabled={uploadingFile}
-                        className="px-4 py-2 bg-[#d4af37] hover:bg-[#c49f2b] text-[#0c0c0d] text-xs font-semibold tracking-wider uppercase flex items-center space-x-2 transition-colors"
-                      >
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>{uploadingFile ? 'UPLOADING...' : 'REPLACE PHOTO'}</span>
-                      </button>
-
-                      <input
-                        type="url"
-                        value={founder.photo_url}
-                        onChange={(e) => setFounder({ ...founder, photo_url: e.target.value })}
-                        placeholder="Or enter image URL..."
-                        className="flex-1 min-w-[200px] bg-black/50 border border-white/15 px-3 py-2 text-xs text-white placeholder-white/30 focus:border-[#d4af37] focus:outline-none"
-                      />
-                    </div>
-                  </div>
+                <div className="p-6 bg-[#111114] border border-white/10">
+                  <ImageUploadField
+                    label="Founder Photograph *"
+                    value={founder.photo_url}
+                    onChange={(newPhoto) => setFounder({ ...founder, photo_url: newPhoto })}
+                  />
                 </div>
 
-                {/* Name & Titles */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-2 font-medium">
@@ -1169,7 +1038,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       required
                       value={founder.designation_line1}
                       onChange={(e) => setFounder({ ...founder, designation_line1: e.target.value })}
-                      placeholder="Founder"
                       className="w-full bg-black/50 border border-white/15 px-4 py-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                     />
                   </div>
@@ -1182,16 +1050,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={founder.designation_line2}
                       onChange={(e) => setFounder({ ...founder, designation_line2: e.target.value })}
-                      placeholder="Lead Cinematographer"
                       className="w-full bg-black/50 border border-white/15 px-4 py-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                     />
                   </div>
                 </div>
 
-                {/* Short Quote / Description */}
                 <div>
                   <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-2 font-medium">
-                    FOUNDER QUOTE (FEATURED PULL-QUOTE) *
+                    FOUNDER QUOTE *
                   </label>
                   <textarea
                     rows={2}
@@ -1202,10 +1068,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   />
                 </div>
 
-                {/* Long Biography / Philosophy */}
                 <div>
                   <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-2 font-medium">
-                    FULL ARTISTIC NARRATIVE & BACKGROUND *
+                    FULL ARTISTIC NARRATIVE *
                   </label>
                   <textarea
                     rows={5}
@@ -1229,22 +1094,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 3: PRE-WEDDING STORIES */}
-          {/* ========================================================================= */}
+          {/* TAB 3: PRE-WEDDINGS */}
           {activeTab === 'preweddings' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
                 <div>
                   <span className="text-[10px] tracking-[0.3em] text-[#d4af37] uppercase font-semibold">
-                    PRE-WEDDING · THE BEGINNING OF FOREVER
+                    PRE-WEDDING PORTFOLIO
                   </span>
                   <h2 className="font-serif text-3xl text-white font-light mt-1">
                     Pre-Wedding Stories
                   </h2>
-                  <p className="text-xs text-white/50 mt-1">
-                    Manage destination pre-wedding features, couples, locations, and high-resolution galleries.
-                  </p>
                 </div>
 
                 <button
@@ -1270,10 +1130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {preweddings.map((story) => (
-                  <div
-                    key={story.id}
-                    className="bg-[#111114] border border-white/10 overflow-hidden flex flex-col justify-between group"
-                  >
+                  <div key={story.id} className="bg-[#111114] border border-white/10 overflow-hidden flex flex-col justify-between group">
                     <div>
                       <div className="relative aspect-[4/3] bg-black/60 overflow-hidden">
                         <img
@@ -1287,15 +1144,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
 
                       <div className="p-5">
-                        <h4 className="font-serif text-xl text-white font-light mb-1">
-                          {story.couple_name}
-                        </h4>
-                        <p className="text-xs text-white/50 line-clamp-2 mt-1 leading-relaxed">
-                          {story.description}
-                        </p>
-                        <div className="mt-3 text-[10px] text-white/40 tracking-wider">
-                          {story.gallery.length} High-Res Frames
-                        </div>
+                        <h4 className="font-serif text-xl text-white font-light mb-1">{story.couple_name}</h4>
+                        <p className="text-xs text-white/50 line-clamp-2 mt-1 leading-relaxed">{story.description}</p>
                       </div>
                     </div>
 
@@ -1334,22 +1184,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 4: WEDDING STORIES */}
-          {/* ========================================================================= */}
+          {/* TAB 4: STORIES */}
           {activeTab === 'stories' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
                 <div>
                   <span className="text-[10px] tracking-[0.3em] text-[#d4af37] uppercase font-semibold">
-                    WEDDINGS · FOREVER BEGINS HERE
+                    ROYAL WEDDING PORTFOLIO
                   </span>
                   <h2 className="font-serif text-3xl text-white font-light mt-1">
-                    Royal Wedding Stories
+                    Wedding Stories
                   </h2>
-                  <p className="text-xs text-white/50 mt-1">
-                    Manage multi-day destination wedding stories, couple narratives, and galleries.
-                  </p>
                 </div>
 
                 <button
@@ -1380,10 +1225,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {stories.map((story) => (
-                  <div
-                    key={story.id}
-                    className="bg-[#111114] border border-white/10 overflow-hidden flex flex-col justify-between group"
-                  >
+                  <div key={story.id} className="bg-[#111114] border border-white/10 overflow-hidden flex flex-col justify-between group">
                     <div>
                       <div className="relative aspect-[4/3] bg-black/60 overflow-hidden">
                         <img
@@ -1397,15 +1239,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
 
                       <div className="p-5">
-                        <h4 className="font-serif text-xl text-white font-light mb-1">
-                          {story.title}
-                        </h4>
-                        <span className="text-[11px] text-[#d4af37] block font-mono">
-                          {story.subtitle}
-                        </span>
-                        <p className="text-xs text-white/50 line-clamp-2 mt-2 leading-relaxed">
-                          {story.description}
-                        </p>
+                        <h4 className="font-serif text-xl text-white font-light mb-1">{story.title}</h4>
+                        <span className="text-[11px] text-[#d4af37] block font-mono">{story.subtitle}</span>
+                        <p className="text-xs text-white/50 line-clamp-2 mt-2 leading-relaxed">{story.description}</p>
                       </div>
                     </div>
 
@@ -1449,9 +1285,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 5: CINEMATIC FILMS */}
-          {/* ========================================================================= */}
+          {/* TAB 5: FILMS */}
           {activeTab === 'films' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
@@ -1462,9 +1296,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <h2 className="font-serif text-3xl text-white font-light mt-1">
                     Cinematic Films
                   </h2>
-                  <p className="text-xs text-white/50 mt-1">
-                    Manage YouTube and Vimeo cinematic highlight trailers and wedding cinema teasers.
-                  </p>
                 </div>
 
                 <button
@@ -1491,10 +1322,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {films.map((film) => (
-                  <div
-                    key={film.id}
-                    className="bg-[#111114] border border-white/10 overflow-hidden group flex flex-col justify-between"
-                  >
+                  <div key={film.id} className="bg-[#111114] border border-white/10 overflow-hidden group flex flex-col justify-between">
                     <div>
                       <div className="relative aspect-video bg-black/60 overflow-hidden">
                         <img
@@ -1511,12 +1339,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <span className="text-[10px] text-[#d4af37] tracking-wider uppercase">
                           {film.location} {film.couple_name && `· ${film.couple_name}`}
                         </span>
-                        <h4 className="font-serif text-xl text-white font-light mt-1">
-                          {film.title}
-                        </h4>
-                        <p className="text-xs text-white/50 line-clamp-2 mt-2">
-                          {film.description}
-                        </p>
+                        <h4 className="font-serif text-xl text-white font-light mt-1">{film.title}</h4>
+                        <p className="text-xs text-white/50 line-clamp-2 mt-2">{film.description}</p>
                       </div>
                     </div>
 
@@ -1556,9 +1380,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 06: MATERNITY & KIDS */}
-          {/* ========================================================================= */}
+          {/* TAB 6: MATERNITY */}
           {activeTab === 'maternity' && settings && (
             <MaternityKidsTab
               settings={settings}
@@ -1569,9 +1391,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             />
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 07: CUSTOMER REVIEWS (BLACK & RED THEME) */}
-          {/* ========================================================================= */}
+          {/* TAB 7: REVIEWS */}
           {activeTab === 'reviews' && settings && (
             <ReviewsTab
               testimonials={testimonials}
@@ -1582,28 +1402,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             />
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 08: STUDIO CONTACT */}
-          {/* ========================================================================= */}
+          {/* TAB 8: CONTACT */}
           {activeTab === 'contact' && settings && (
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="pb-6 border-b border-white/10">
                 <span className="text-[10px] tracking-[0.3em] text-[#d4af37] uppercase font-semibold font-mono">
-                  08. DIRECT COMMUNICATION CHANNELS
+                  STUDIO CONTACT DETAILS
                 </span>
                 <h2 className="font-serif text-3xl text-white font-light mt-1">
-                  Studio Contact & Location
+                  Contact & Location
                 </h2>
-                <p className="text-xs text-white/50 mt-1">
-                  Configure phone numbers, consultation email, WhatsApp connectivity, and studio physical addresses.
-                </p>
               </div>
 
               <form onSubmit={handleSaveSettings} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-2 font-medium font-mono">
-                      PHONE NUMBER (FOR 'CALL' BUTTON) *
+                      PHONE NUMBER *
                     </label>
                     <input
                       type="text"
@@ -1617,7 +1432,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                   <div>
                     <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-2 font-medium font-mono">
-                      WHATSAPP NUMBER (FOR 'WHATSAPP' BUTTON) *
+                      WHATSAPP NUMBER *
                     </label>
                     <input
                       type="text"
@@ -1633,7 +1448,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-2 font-medium font-mono">
-                      OFFICIAL STUDIO EMAIL *
+                      OFFICIAL EMAIL *
                     </label>
                     <input
                       type="email"
@@ -1685,9 +1500,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 09: SOCIAL MEDIA */}
-          {/* ========================================================================= */}
+          {/* TAB 9: SOCIAL MEDIA */}
           {activeTab === 'social_media' && settings && (
             <SocialMediaTab
               settings={settings}
@@ -1697,9 +1510,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             />
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 10: WEBSITE TEXT EDITOR */}
-          {/* ========================================================================= */}
+          {/* TAB 10: TEXT EDITOR */}
           {activeTab === 'website_text' && settings && (
             <WebsiteTextTab
               settings={settings}
@@ -1709,9 +1520,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             />
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 11: SEO SETTINGS */}
-          {/* ========================================================================= */}
+          {/* TAB 11: SEO */}
           {activeTab === 'seo' && settings && (
             <SeoTab
               settings={settings}
@@ -1720,16 +1529,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             />
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 12: ADMIN ACCOUNT & SECURITY */}
-          {/* ========================================================================= */}
+          {/* TAB 12: ADMIN ACCOUNT */}
           {activeTab === 'admin_account' && (
             <AdminAccountTab showStatus={showStatus} />
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 9: CLIENT BOOKING ENQUIRIES */}
-          {/* ========================================================================= */}
+          {/* TAB 13: ENQUIRIES */}
           {activeTab === 'enquiries' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="pb-6 border-b border-white/10">
@@ -1739,9 +1544,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <h2 className="font-serif text-3xl text-white font-light mt-1">
                   Incoming Wedding Date Inquiries ({enquiries.length})
                 </h2>
-                <p className="text-xs text-white/50 mt-1">
-                  Enquiries submitted through the website booking form in real-time.
-                </p>
               </div>
 
               {enquiries.length === 0 ? (
@@ -1757,9 +1559,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     >
                       <div className="flex-1 space-y-2">
                         <div className="flex flex-wrap items-center gap-3">
-                          <h4 className="font-serif text-xl text-white font-light">
-                            {enq.name}
-                          </h4>
+                          <h4 className="font-serif text-xl text-white font-light">{enq.name}</h4>
                           <span className="px-2.5 py-0.5 bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#d4af37] text-[10px] uppercase font-mono">
                             {enq.eventType}
                           </span>
@@ -1813,9 +1613,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* TAB 10: DATABASE & SUPABASE MIGRATION */}
-          {/* ========================================================================= */}
+          {/* TAB 14: DATABASE */}
           {activeTab === 'database' && (
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="pb-6 border-b border-white/10">
@@ -1825,150 +1623,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <h2 className="font-serif text-3xl text-white font-light mt-1">
                   Database & Storage Architecture
                 </h2>
-                <p className="text-xs text-white/50 mt-1">
-                  Active backend storage: High-speed Node.js + JSON Engine in <code className="text-[#d4af37]">data/sen_database.json</code> with uploaded assets in <code className="text-[#d4af37]">/uploads</code>.
-                </p>
               </div>
 
-              {/* Ready-to-run Supabase SQL Schema */}
-              <div className="p-6 bg-[#111114] border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-[#d4af37]">
-                    <Database className="w-5 h-5" />
-                    <h4 className="text-xs tracking-wider uppercase font-semibold">
-                      Complete Supabase PostgreSQL DDL Schema
-                    </h4>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-700">
-                    Ready to execute
-                  </span>
-                </div>
-
-                <p className="text-xs text-white/60 leading-relaxed">
-                  If you deploy this site with a cloud-hosted Supabase database, copy and run these exact SQL queries in your Supabase SQL Editor:
-                </p>
-
-                <div className="bg-black/90 p-4 border border-white/10 font-mono text-[11px] text-[#cfc9be] overflow-x-auto max-h-72">
-                  <pre>{`-- =============================================
--- SEN PHOTOGRAPHY SUPABASE DATABASE SCHEMA
--- =============================================
-
-CREATE TABLE IF NOT EXISTS site_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  brand_name TEXT DEFAULT 'SEN PHOTOGRAPHY',
-  hero_headline TEXT DEFAULT 'YOUR STORY. OUR FRAME.',
-  hero_subtitle TEXT DEFAULT 'WEDDING PHOTOGRAPHY · FILMS / STORIES',
-  hero_slideshow_interval INT DEFAULT 1000,
-  phone_number TEXT,
-  whatsapp_number TEXT,
-  email TEXT,
-  city TEXT,
-  address TEXT,
-  instagram_url TEXT,
-  instagram_handle TEXT,
-  google_review_url TEXT,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS hero_images (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  image_url TEXT NOT NULL,
-  title TEXT,
-  sort_order INT DEFAULT 1,
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS founder (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT DEFAULT 'DIPAK',
-  designation_line1 TEXT DEFAULT 'Founder',
-  designation_line2 TEXT DEFAULT 'Lead Cinematographer',
-  short_description TEXT,
-  long_description TEXT,
-  photo_url TEXT,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS prewedding_stories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  couple_name TEXT NOT NULL,
-  location TEXT,
-  date TEXT,
-  cover_image TEXT NOT NULL,
-  description TEXT,
-  gallery TEXT[] DEFAULT '{}',
-  sort_order INT DEFAULT 1,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS wedding_stories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  subtitle TEXT,
-  couple_name TEXT NOT NULL,
-  location TEXT,
-  date TEXT,
-  cover_image TEXT NOT NULL,
-  description TEXT,
-  highlights TEXT[] DEFAULT '{}',
-  gallery TEXT[] DEFAULT '{}',
-  film_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS films (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  couple_name TEXT,
-  location TEXT,
-  duration TEXT,
-  cover_image TEXT,
-  video_url TEXT NOT NULL,
-  description TEXT,
-  featured BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE IF NOT EXISTS testimonials (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  quote TEXT NOT NULL,
-  couple_name TEXT NOT NULL,
-  location TEXT,
-  event_year TEXT,
-  shoot_type TEXT,
-  photo_url TEXT
-);
-
-CREATE TABLE IF NOT EXISTS enquiries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  email TEXT NOT NULL,
-  wedding_date TEXT,
-  location TEXT,
-  event_type TEXT,
-  message TEXT,
-  status TEXT DEFAULT 'New',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);`}</pre>
-                </div>
-              </div>
-
-              {/* Reset to Factory Demo Data */}
               <div className="p-6 bg-red-950/20 border border-red-900/40 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                   <h4 className="text-xs uppercase text-red-200 font-semibold tracking-wider">
                     Reset Database to Factory Defaults
                   </h4>
                   <p className="text-xs text-white/50 mt-0.5">
-                    Restores the initial 10 curated hero images, founder Dipak profile, pre-wedding stories, and royal wedding films.
+                    Restores curated demonstration records.
                   </p>
                 </div>
 
                 <button
                   onClick={async () => {
-                    if (!confirm('Warning: This will reload all default curated demonstration records. Proceed?')) return;
+                    if (!confirm('Warning: This will reload default records. Proceed?')) return;
                     await api.resetDatabase();
                     await loadData();
                     onRefreshData();
@@ -1984,9 +1653,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
         </main>
       </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL: HERO IMAGE ADD / EDIT */}
-      {/* ========================================================================= */}
+      {/* MODAL 1: HERO IMAGE */}
       {heroModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#111114] border border-white/15 max-w-lg w-full p-6 space-y-4 shadow-2xl">
@@ -1995,19 +1662,11 @@ CREATE TABLE IF NOT EXISTS enquiries (
             </h3>
 
             <form onSubmit={handleSaveHeroImage} className="space-y-4">
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  IMAGE URL *
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={heroForm.image_url}
-                  onChange={(e) => setHeroForm({ ...heroForm, image_url: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Hero Image Upload *"
+                value={heroForm.image_url}
+                onChange={(photo) => setHeroForm({ ...heroForm, image_url: photo })}
+              />
 
               <div>
                 <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
@@ -2055,9 +1714,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: PRE-WEDDING ADD / EDIT */}
-      {/* ========================================================================= */}
+      {/* MODAL 2: PRE-WEDDING */}
       {preweddingModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-[#111114] border border-white/15 max-w-2xl w-full p-6 sm:p-8 space-y-4 shadow-2xl my-8">
@@ -2096,42 +1753,11 @@ CREATE TABLE IF NOT EXISTS enquiries (
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  COVER IMAGE URL *
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="url"
-                    required
-                    value={preweddingForm.cover_image}
-                    onChange={(e) => setPreweddingForm({ ...preweddingForm, cover_image: e.target.value })}
-                    placeholder="https://..."
-                    className="flex-1 bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                  />
-                  <input
-                    type="file"
-                    ref={preweddingFileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      if (!e.target.files?.[0]) return;
-                      const url = await handleFileUpload(e.target.files[0]);
-                      if (url) {
-                        setPreweddingForm(prev => ({ ...prev, cover_image: url }));
-                      }
-                      e.target.value = '';
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => preweddingFileInputRef.current?.click()}
-                    className="px-3 py-2 bg-white/10 text-white text-xs border border-white/20 hover:bg-white/20"
-                  >
-                    UPLOAD
-                  </button>
-                </div>
-              </div>
+              <ImageUploadField
+                label="Cover Image Upload *"
+                value={preweddingForm.cover_image}
+                onChange={(photo) => setPreweddingForm({ ...preweddingForm, cover_image: photo })}
+              />
 
               <div>
                 <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
@@ -2142,21 +1768,8 @@ CREATE TABLE IF NOT EXISTS enquiries (
                   required
                   value={preweddingForm.description}
                   onChange={(e) => setPreweddingForm({ ...preweddingForm, description: e.target.value })}
-                  placeholder="Describe the mood, location, and aesthetic of the shoot..."
+                  placeholder="Describe the shoot..."
                   className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  FULLSCREEN GALLERY IMAGE URLS (ONE PER LINE)
-                </label>
-                <textarea
-                  rows={4}
-                  value={preweddingForm.gallery}
-                  onChange={(e) => setPreweddingForm({ ...preweddingForm, gallery: e.target.value })}
-                  placeholder="https://images.unsplash.com/...\nhttps://images.unsplash.com/..."
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white font-mono focus:border-[#d4af37] focus:outline-none"
                 />
               </div>
 
@@ -2180,9 +1793,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: WEDDING STORY ADD / EDIT */}
-      {/* ========================================================================= */}
+      {/* MODAL 3: WEDDING STORY */}
       {storyModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-[#111114] border border-white/15 max-w-2xl w-full p-6 sm:p-8 space-y-4 shadow-2xl my-8">
@@ -2250,19 +1861,11 @@ CREATE TABLE IF NOT EXISTS enquiries (
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  COVER IMAGE URL *
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={storyForm.cover_image}
-                  onChange={(e) => setStoryForm({ ...storyForm, cover_image: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Story Cover Image Upload *"
+                value={storyForm.cover_image}
+                onChange={(photo) => setStoryForm({ ...storyForm, cover_image: photo })}
+              />
 
               <div>
                 <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
@@ -2274,31 +1877,6 @@ CREATE TABLE IF NOT EXISTS enquiries (
                   value={storyForm.description}
                   onChange={(e) => setStoryForm({ ...storyForm, description: e.target.value })}
                   className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  STORY HIGHLIGHTS (ONE PER LINE)
-                </label>
-                <textarea
-                  rows={2}
-                  value={storyForm.highlights}
-                  onChange={(e) => setStoryForm({ ...storyForm, highlights: e.target.value })}
-                  placeholder="Sunset Pheras beside the lake\nSabyasachi crimson velvet lehenga"
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  GALLERY PHOTOS (ONE URL PER LINE)
-                </label>
-                <textarea
-                  rows={3}
-                  value={storyForm.gallery}
-                  onChange={(e) => setStoryForm({ ...storyForm, gallery: e.target.value })}
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white font-mono focus:border-[#d4af37] focus:outline-none"
                 />
               </div>
 
@@ -2322,9 +1900,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: CINEMATIC FILM ADD / EDIT */}
-      {/* ========================================================================= */}
+      {/* MODAL 4: CINEMATIC FILM */}
       {filmModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#111114] border border-white/15 max-w-lg w-full p-6 space-y-4 shadow-2xl">
@@ -2347,47 +1923,6 @@ CREATE TABLE IF NOT EXISTS enquiries (
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                    COUPLE NAME
-                  </label>
-                  <input
-                    type="text"
-                    value={filmForm.couple_name}
-                    onChange={(e) => setFilmForm({ ...filmForm, couple_name: e.target.value })}
-                    placeholder="Aarav & Meera"
-                    className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                    DURATION
-                  </label>
-                  <input
-                    type="text"
-                    value={filmForm.duration}
-                    onChange={(e) => setFilmForm({ ...filmForm, duration: e.target.value })}
-                    placeholder="4:30"
-                    className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  LOCATION
-                </label>
-                <input
-                  type="text"
-                  value={filmForm.location}
-                  onChange={(e) => setFilmForm({ ...filmForm, location: e.target.value })}
-                  placeholder="The Oberoi Udaivilas, Udaipur"
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
-
               <div>
                 <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
                   YOUTUBE / VIMEO VIDEO URL *
@@ -2402,19 +1937,11 @@ CREATE TABLE IF NOT EXISTS enquiries (
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  POSTER / THUMBNAIL IMAGE URL *
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={filmForm.cover_image}
-                  onChange={(e) => setFilmForm({ ...filmForm, cover_image: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Poster / Thumbnail Image Upload *"
+                value={filmForm.cover_image}
+                onChange={(photo) => setFilmForm({ ...filmForm, cover_image: photo })}
+              />
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
                 <button
@@ -2436,9 +1963,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: TESTIMONIAL ADD / EDIT */}
-      {/* ========================================================================= */}
+      {/* MODAL 5: TESTIMONIAL */}
       {testModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#111114] border border-white/15 max-w-lg w-full p-6 space-y-4 shadow-2xl">
@@ -2456,66 +1981,15 @@ CREATE TABLE IF NOT EXISTS enquiries (
                   required
                   value={testForm.quote}
                   onChange={(e) => setTestForm({ ...testForm, quote: e.target.value })}
-                  placeholder="Every emotion was captured beautifully. It felt like reliving our wedding all over again..."
                   className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                    COUPLE NAME *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={testForm.couple_name}
-                    onChange={(e) => setTestForm({ ...testForm, couple_name: e.target.value })}
-                    placeholder="RIYA & KUNAL"
-                    className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                    LOCATION & YEAR *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={testForm.location}
-                    onChange={(e) => setTestForm({ ...testForm, location: e.target.value })}
-                    placeholder="SAMODE PALACE, JAIPUR"
-                    className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  SHOOT TYPE
-                </label>
-                <input
-                  type="text"
-                  value={testForm.shoot_type}
-                  onChange={(e) => setTestForm({ ...testForm, shoot_type: e.target.value })}
-                  placeholder="Royal Destination Wedding"
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1.5">
-                  CLIENT PHOTO URL (OPTIONAL)
-                </label>
-                <input
-                  type="url"
-                  value={testForm.photo_url}
-                  onChange={(e) => setTestForm({ ...testForm, photo_url: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full bg-black/50 border border-white/15 px-3 py-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                />
-              </div>
+              <ImageUploadField
+                label="Client Photo Upload (Optional)"
+                value={testForm.photo_url}
+                onChange={(photo) => setTestForm({ ...testForm, photo_url: photo })}
+              />
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
                 <button
