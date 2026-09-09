@@ -69,7 +69,7 @@ const SectionBanner: React.FC<{
   </div>
 );
 
-function App() {
+export default function App() {
   const [settings, setSettings] = useState<SiteSettings>(initialSiteSettings);
   const [founder, setFounder] = useState<FounderSettings>(initialFounder);
   const [heroImages, setHeroImages] = useState<HeroImage[]>(initialHeroImages);
@@ -356,5 +356,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
