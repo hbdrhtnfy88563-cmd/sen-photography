@@ -294,7 +294,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     sessionStorage.removeItem('sen_admin_auth');
   };
 
-  // Maternity, Reviews और Social Media टैब्स के लिए फ़ाइल अपलोडर
   const handleFileUpload = async (file: File): Promise<string | null> => {
     try {
       const res = await api.uploadImage(file);
@@ -1129,7 +1128,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* TAB 3: PRE-WEDDINGS (सिर्फ 1 लाइन टाइटल) */}
+          {/* TAB 3: PRE-WEDDINGS */}
           {activeTab === 'preweddings' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
@@ -1205,7 +1204,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* TAB 4: STORIES (सिर्फ 1 लाइन टाइटल) */}
+          {/* TAB 4: STORIES */}
           {activeTab === 'stories' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
@@ -1281,7 +1280,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
 
-          {/* TAB 5: FILMS (सिर्फ 1 लाइन टाइटल) */}
+          {/* TAB 5: FILMS */}
           {activeTab === 'films' && (
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
@@ -1513,16 +1512,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <AdminAccountTab showStatus={showStatus} />
           )}
 
-          {/* TAB 13: ENQUIRIES */}
+          {/* TAB 13: ENQUIRIES (विस्तृत लीड्स कार्ड: नाम, मोबाइल, ईमेल, डेट, वेन्यू और डिस्क्रिप्शन) */}
           {activeTab === 'enquiries' && (
             <div className="max-w-6xl mx-auto space-y-8">
-              <div className="pb-6 border-b border-white/10">
-                <span className="text-[10px] tracking-[0.3em] text-[#d4af37] uppercase font-semibold">
-                  BOOKING PIPELINE
-                </span>
-                <h2 className="font-serif text-3xl text-white font-light mt-1">
-                  Incoming Wedding Date Inquiries ({enquiries.length})
-                </h2>
+              <div className="pb-6 border-b border-white/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] tracking-[0.3em] text-[#d4af37] uppercase font-semibold">
+                    BOOKING PIPELINE
+                  </span>
+                  <h2 className="font-serif text-3xl text-white font-light mt-1">
+                    Incoming Client Inquiries ({enquiries.length})
+                  </h2>
+                </div>
               </div>
 
               {enquiries.length === 0 ? (
@@ -1531,62 +1532,81 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {enquiries.map((enq) => (
-                    <div
-                      key={enq.id}
-                      className="p-6 bg-[#111114] border border-white/10 flex flex-col md:flex-row items-start justify-between gap-6"
-                    >
-                      <div className="flex-1 space-y-2">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h4 className="font-serif text-xl text-white font-light">{enq.name}</h4>
-                          <span className="px-2.5 py-0.5 bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#d4af37] text-[10px] uppercase font-mono">
-                            {enq.eventType}
-                          </span>
-                          <span className="text-xs text-white/40 font-mono">
-                            Date: {enq.weddingDate || 'TBD'}
-                          </span>
+                  {enquiries.map((enq: any) => {
+                    const clientName = enq.name || enq.client_name || enq.fullName || 'Client';
+                    const clientPhone = enq.phone || enq.mobile || enq.phoneNumber || '';
+                    const clientEmail = enq.email || enq.emailAddress || '';
+                    const clientVenue = enq.location || enq.venue || enq.city || 'Not Specified';
+                    const clientDate = enq.weddingDate || enq.date || enq.event_date || 'Date Not Provided';
+                    const clientType = enq.eventType || enq.event_type || enq.shoot_type || 'Wedding Shoot';
+                    const clientMessage = enq.message || enq.description || enq.notes || '';
+
+                    return (
+                      <div
+                        key={enq.id}
+                        className="p-6 bg-[#111114] border border-white/10 flex flex-col md:flex-row items-start justify-between gap-6 hover:border-[#d4af37]/40 transition-colors"
+                      >
+                        <div className="flex-1 space-y-3">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h4 className="font-serif text-2xl text-white font-medium tracking-wide">
+                              {clientName}
+                            </h4>
+                            <span className="px-3 py-0.5 bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#d4af37] text-[10px] uppercase tracking-wider font-semibold">
+                              {clientType}
+                            </span>
+                            <span className="text-xs text-white/70 font-mono bg-white/5 px-2.5 py-1 border border-white/10">
+                              📅 Date: <strong className="text-white">{clientDate}</strong>
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-6 text-xs text-white/70 pt-1">
+                            <span>📞 Mobile: <strong className="text-white font-mono text-sm">{clientPhone}</strong></span>
+                            <span>✉️ Email: <strong className="text-white">{clientEmail}</strong></span>
+                            <span>📍 Location / Venue: <strong className="text-[#d4af37]">{clientVenue}</strong></span>
+                          </div>
+
+                          {clientMessage && (
+                            <div className="mt-3 bg-black/60 p-4 border border-white/10 rounded-sm">
+                              <span className="text-[10px] tracking-wider uppercase text-[#d4af37] block font-semibold mb-1">
+                                Client Message / Description:
+                              </span>
+                              <p className="text-xs text-white/90 leading-relaxed font-light whitespace-pre-line">
+                                {clientMessage}
+                              </p>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-white/60">
-                          <span>Phone: <strong className="text-white font-medium">{enq.phone}</strong></span>
-                          <span>Email: <strong className="text-white font-medium">{enq.email}</strong></span>
-                          <span>Venue: <strong className="text-[#d4af37] font-medium">{enq.location}</strong></span>
+                        <div className="flex items-center space-x-3 shrink-0">
+                          {clientPhone && (
+                            <a
+                              href={`https://wa.me/${clientPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                `Hello ${clientName}, thank you for contacting SEN PHOTOGRAPHY regarding your ${clientType} celebration on ${clientDate}.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 bg-[#25D366]/20 hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/50 text-xs tracking-wider uppercase font-semibold transition-all"
+                            >
+                              WhatsApp Client
+                            </a>
+                          )}
+
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Are you sure you want to delete this enquiry?')) return;
+                              await api.deleteEnquiry(enq.id);
+                              setEnquiries((prev) => prev.filter((e) => e.id !== enq.id));
+                              showStatus('success', 'Enquiry deleted');
+                            }}
+                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/40 border border-transparent hover:border-red-900 transition-colors"
+                            title="Delete enquiry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-
-                        {enq.message && (
-                          <p className="text-xs text-white/70 bg-black/40 p-3 border border-white/5 mt-2 leading-relaxed font-light">
-                            "{enq.message}"
-                          </p>
-                        )}
                       </div>
-
-                      <div className="flex items-center space-x-2 shrink-0">
-                        <a
-                          href={`https://wa.me/${enq.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                            `Hello ${enq.name}, thank you for inquiring with SEN PHOTOGRAPHY for your celebration on ${enq.weddingDate}.`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-1.5 bg-[#25D366]/20 hover:bg-[#25D366] text-[#25D366] hover:text-black border border-[#25D366]/40 text-xs tracking-wider uppercase transition-colors"
-                        >
-                          WHATSAPP CLIENT
-                        </a>
-
-                        <button
-                          onClick={async () => {
-                            if (!confirm('Delete this inquiry?')) return;
-                            await api.deleteEnquiry(enq.id);
-                            setEnquiries(prev => prev.filter(e => e.id !== enq.id));
-                            showStatus('success', 'Inquiry deleted');
-                          }}
-                          className="p-1.5 text-red-400 hover:bg-white/5 transition-colors"
-                          title="Delete inquiry"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
