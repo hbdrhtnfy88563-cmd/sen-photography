@@ -7,7 +7,6 @@ import { PreWeddings } from './components/PreWeddings';
 import { WeddingStoriesSection } from './components/WeddingStoriesSection';
 import { WeddingsGallery } from './components/WeddingsGallery';
 import { WeddingFilms } from './components/WeddingFilms';
-import { MaternityKids } from './components/MaternityKids';
 import { InstagramSection } from './components/InstagramSection';
 import { Testimonials } from './components/Testimonials';
 import { ContactSection } from './components/ContactSection';
@@ -72,6 +71,71 @@ const SectionBanner: React.FC<{
   </div>
 );
 
+// =========================================================================
+// इन-लाइन मैटरनिटी व किड्स सेक्शन (अलग फ़ाइल की कोई ज़रूरत नहीं)
+// =========================================================================
+const MaternityKidsSection: React.FC<{
+  photos: PhotoItem[];
+  onOpenPhotoFullscreen: (photo: PhotoItem) => void;
+  onBookDate: () => void;
+}> = ({ photos, onOpenPhotoFullscreen, onBookDate }) => {
+  const maternityPhotos = photos.filter(
+    (p) => p.category === 'MATERNITY' || p.category === 'KIDS' || p.category === 'MATERNITY & KIDS'
+  );
+
+  const displayList = maternityPhotos.length > 0 ? maternityPhotos : [
+    { id: 'mk1', image_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80', title: 'PURE MOTHERHOOD' },
+    { id: 'mk2', image_url: 'https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=800&q=80', title: 'LITTLE MIRACLES' },
+    { id: 'mk3', image_url: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=800&q=80', title: 'INNOCENCE & JOY' },
+    { id: 'mk4', image_url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80', title: 'ETERNAL BONDS' },
+  ];
+
+  return (
+    <section className="bg-white text-black py-16 px-4 sm:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center space-x-3 mb-10">
+          <span className="w-8 h-[1px] bg-black/60"></span>
+          <h3 className="text-xs sm:text-sm tracking-[0.25em] uppercase font-medium text-black/80">
+            LATEST MATERNITY & KIDS
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {displayList.slice(0, 8).map((photo: any) => (
+            <div
+              key={photo.id}
+              onClick={() => onOpenPhotoFullscreen(photo)}
+              className="group cursor-pointer flex flex-col items-center select-none"
+            >
+              <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-100 shadow-sm">
+                <img
+                  src={photo.image_url}
+                  alt={photo.title || 'Maternity'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+              </div>
+              <div className="mt-4 text-center">
+                <h4 className="text-[11px] sm:text-xs font-serif font-bold uppercase tracking-[0.2em] text-black/90 group-hover:text-[#b38a22] transition-colors">
+                  {photo.title || 'SACRED MOMENTS'}
+                </h4>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-14 flex justify-center">
+          <button
+            onClick={onBookDate}
+            className="px-8 py-3 border border-black/30 hover:border-black text-[10px] tracking-[0.25em] uppercase font-semibold text-black transition-all hover:bg-black hover:text-white"
+          >
+            EXPLORE MORE →
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 function App() {
   const [settings, setSettings] = useState<SiteSettings>(initialSiteSettings);
   const [founder, setFounder] = useState<FounderSettings>(initialFounder);
@@ -82,7 +146,6 @@ function App() {
   const [films, setFilms] = useState<WeddingFilm[]>(initialFilms);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
 
-  // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -261,7 +324,7 @@ function App() {
 
         <FounderSection founder={founder} onBookDate={handleOpenBooking} />
 
-        {/* 1. WEDDING STORIES BANNER & GALLERY */}
+        {/* 1. WEDDING STORIES */}
         <SectionBanner
           id="stories"
           title="Stories"
@@ -274,7 +337,7 @@ function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 2. WEDDINGS BANNER & GALLERY */}
+        {/* 2. WEDDING GALLERY */}
         <SectionBanner
           id="weddings"
           title="Wedding"
@@ -286,7 +349,7 @@ function App() {
           onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
         />
 
-        {/* 3. PRE-WEDDINGS BANNER & GALLERY */}
+        {/* 3. PRE-WEDDINGS */}
         <SectionBanner
           id="preweddings"
           title="Pre-wedding"
@@ -300,7 +363,7 @@ function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 4. CINEMATIC FILMS BANNER & VIDEOS */}
+        {/* 4. CINEMATIC FILMS */}
         <SectionBanner
           id="films"
           title="Films"
@@ -309,7 +372,7 @@ function App() {
         />
         <WeddingFilms films={films} />
 
-        {/* 5. MATERNITY & KIDS BANNER & PHOTOS */}
+        {/* 5. MATERNITY & KIDS */}
         {settings?.maternityKidsEnabled !== false && (
           <>
             <SectionBanner
@@ -318,7 +381,7 @@ function App() {
               subtitle="THE SACRED CHAPTERS OF LIFE"
               bgImage="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=2000&q=85"
             />
-            <MaternityKids
+            <MaternityKidsSection
               photos={photos}
               onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
               onBookDate={handleOpenBooking}
