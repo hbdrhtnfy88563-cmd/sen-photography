@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ImageUploadField } from '../components/ImageUploadField';
 import {
   ArrowLeft,
   Upload,
@@ -53,6 +52,97 @@ import { MaternityKidsTab } from './tabs/MaternityKidsTab';
 import { ReviewsTab } from './tabs/ReviewsTab';
 import { SocialMediaTab } from './tabs/SocialMediaTab';
 import { SeoTab } from './tabs/SeoTab';
+
+// =========================================================================
+// इन-लाइन यूनिवर्सल इमेज अपलोडर (अलग से कोई नई फ़ाइल बनाने की ज़रूरत नहीं)
+// =========================================================================
+const InlineImageUploader: React.FC<{
+  label: string;
+  value: string;
+  onChange: (base64Url: string) => void;
+}> = ({ label, value, onChange }) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1920;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const optimizedBase64 = canvas.toDataURL('image/jpeg', 0.82);
+        onChange(optimizedBase64);
+        setLoading(false);
+      };
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="space-y-2 mb-4">
+      <label className="block text-[10px] tracking-[0.2em] uppercase text-white/60 font-medium">
+        {label}
+      </label>
+
+      <div className="flex items-center gap-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading}
+          className="px-4 py-2 bg-[#222] hover:bg-[#d4af37] text-white hover:text-black border border-white/20 hover:border-[#d4af37] text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2"
+        >
+          📁 {loading ? 'Processing...' : 'Upload Photo From PC / Mobile'}
+        </button>
+
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="text-xs text-red-400 hover:text-red-300 underline"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+
+      {value && (
+        <div className="relative w-32 h-24 rounded border border-[#d4af37]/50 mt-2 bg-black/60 overflow-hidden">
+          <img src={value} alt="Preview" className="w-full h-full object-cover" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface AdminDashboardProps {
   onBackToSite: () => void;
@@ -1008,7 +1098,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <form onSubmit={handleSaveFounder} className="space-y-6">
                 <div className="p-6 bg-[#111114] border border-white/10">
-                  <ImageUploadField
+                  <InlineImageUploader
                     label="Founder Photograph *"
                     value={founder.photo_url}
                     onChange={(newPhoto) => setFounder({ ...founder, photo_url: newPhoto })}
@@ -1662,7 +1752,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </h3>
 
             <form onSubmit={handleSaveHeroImage} className="space-y-4">
-              <ImageUploadField
+              <InlineImageUploader
                 label="Hero Image Upload *"
                 value={heroForm.image_url}
                 onChange={(photo) => setHeroForm({ ...heroForm, image_url: photo })}
@@ -1753,7 +1843,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              <ImageUploadField
+              <InlineImageUploader
                 label="Cover Image Upload *"
                 value={preweddingForm.cover_image}
                 onChange={(photo) => setPreweddingForm({ ...preweddingForm, cover_image: photo })}
@@ -1861,7 +1951,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              <ImageUploadField
+              <InlineImageUploader
                 label="Story Cover Image Upload *"
                 value={storyForm.cover_image}
                 onChange={(photo) => setStoryForm({ ...storyForm, cover_image: photo })}
@@ -1937,7 +2027,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <ImageUploadField
+              <InlineImageUploader
                 label="Poster / Thumbnail Image Upload *"
                 value={filmForm.cover_image}
                 onChange={(photo) => setFilmForm({ ...filmForm, cover_image: photo })}
@@ -1985,7 +2075,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <ImageUploadField
+              <InlineImageUploader
                 label="Client Photo Upload (Optional)"
                 value={testForm.photo_url}
                 onChange={(photo) => setTestForm({ ...testForm, photo_url: photo })}
