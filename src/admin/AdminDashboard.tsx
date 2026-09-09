@@ -294,6 +294,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     sessionStorage.removeItem('sen_admin_auth');
   };
 
+  // Maternity, Reviews और Social Media टैब्स के लिए फ़ाइल अपलोडर
+  const handleFileUpload = async (file: File): Promise<string | null> => {
+    try {
+      const res = await api.uploadImage(file);
+      showStatus('success', 'Image uploaded successfully');
+      return res.url;
+    } catch {
+      showStatus('error', 'Upload failed');
+      return null;
+    }
+  };
+
   // ------------------------------------------
   // HERO SLIDESHOW HANDLERS
   // ------------------------------------------
