@@ -1,178 +1,103 @@
-import React, { useState } from 'react';
-import { Eye, X } from 'lucide-react';
+import React from 'react';
 import { PhotoItem } from '../types';
 
-interface MaternityKidsProps {
+interface MaternitySectionProps {
   photos: PhotoItem[];
-  introImage?: string;
-  introSubtitle?: string;
-  introTitle?: string;
-  onOpenPhotoFullscreen?: (photo: PhotoItem) => void;
+  onOpenPhotoFullscreen: (photo: PhotoItem) => void;
   onBookDate: () => void;
 }
 
-export const MaternityKids: React.FC<MaternityKidsProps> = ({
+// अगर डेटाबेस में इमेज न हो तो यह हाई-रिज़ॉल्यूशन फ़ोटो खुद लोड होगी (ब्लैक स्क्रीन कभी नहीं आएगी)
+const DEFAULT_BANNER_IMG = "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=2000&q=85";
+
+export const MaternitySection: React.FC<MaternitySectionProps> = ({
   photos,
-  introImage = 'https://images.unsplash.com/photo-1544126592-807ade215a0f?auto=format&fit=crop&w=2400&q=85',
-  introSubtitle = 'THE SACRED CHAPTERS',
-  introTitle = 'MATERNITY & KIDS',
+  onOpenPhotoFullscreen,
   onBookDate,
 }) => {
-  const [activeLightboxImg, setActiveLightboxImg] = useState<PhotoItem | null>(null);
-
-  const familyPhotos = photos.filter(
-    (p) => p.category.toUpperCase() === 'MATERNITY' || p.category.toUpperCase() === 'KIDS'
+  // मैटरनिटी फ़ोटोज़ फ़िल्टर
+  const maternityPhotos = photos.filter(
+    (p) => p.category === 'MATERNITY' || p.category === 'KIDS' || p.category === 'MATERNITY & KIDS'
   );
 
+  // डिफ़ॉल्ट 4 फ़ोटो अगर एडमिन से अपलोड न हुई हों
+  const displayPhotos = maternityPhotos.length > 0 ? maternityPhotos : [
+    { id: 'm1', image_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80', title: 'PURE MOTHERHOOD' },
+    { id: 'm2', image_url: 'https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=800&q=80', title: 'LITTLE MIRACLES' },
+    { id: 'm3', image_url: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=800&q=80', title: 'INNOCENCE & JOY' },
+    { id: 'm4', image_url: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80', title: 'ETERNAL BONDS' },
+  ];
+
   return (
-    <section id="maternity-kids" className="relative w-full">
-      {/* ===================================================
-          01. FULL-SCREEN CINEMATIC INTRODUCTORY IMAGE
-          - 100% viewport width & height
-          - NO border, no card frame, no rounded corners
-          - Slow smooth zoom OUT
-          - Dark cinematic overlay
-          =================================================== */}
-      <div className="relative w-full h-screen min-h-[600px] overflow-hidden flex items-center justify-center bg-black">
-        {/* Slow Zoom-Out Background */}
-        <div
-          className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 ease-out will-change-transform animate-slow-zoom-out"
-          style={{
-            backgroundImage: `url(${introImage})`,
-          }}
+    <div id="maternity" className="w-full">
+      {/* 1. फुल-स्क्रीन सिनेमैटिक फ़ोटो बैनर (काली स्क्रीन कभी नहीं आएगी) */}
+      <div className="relative w-full h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden bg-black select-none">
+        <img
+          src={DEFAULT_BANNER_IMG}
+          alt="Maternity and Kids"
+          className="absolute inset-0 w-full h-full object-cover brightness-[0.55] contrast-[1.08] scale-105 transition-transform duration-1000"
         />
-
-        {/* Cinematic dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
-
-        {/* Intro Text */}
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center">
-          <span className="text-xs sm:text-sm tracking-[0.45em] uppercase text-[#f5f5f5] font-light mb-4 block drop-shadow-md">
-            {introSubtitle}
+        <div className="relative z-10 text-center px-4 flex flex-col items-center">
+          <span className="text-[10px] sm:text-xs tracking-[0.35em] text-[#d4af37] uppercase font-mono mb-2">
+            THE SACRED CHAPTERS
           </span>
-
-          <h2 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-white font-light tracking-[0.15em] uppercase mb-5 drop-shadow-lg">
-            {introTitle}
+          <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif italic text-white tracking-wide capitalize drop-shadow-2xl mb-4">
+            maternity & kids
           </h2>
-
-          <div className="w-24 sm:w-36 h-[1px] bg-white/70 mx-auto mb-6" />
-
-          <span className="text-[11px] sm:text-xs tracking-[0.35em] uppercase text-white/80 font-medium mb-4">
+          <p className="text-[9px] sm:text-[10px] tracking-[0.4em] uppercase text-white/80 font-light">
             SCROLL TO EXPLORE
-          </span>
-
-          <div className="flex flex-col items-center">
-            <div className="w-[1px] h-10 sm:h-14 bg-gradient-to-b from-white to-transparent animate-pulse" />
-            <span className="text-white/70 text-xs mt-1 animate-bounce">↓</span>
-          </div>
+          </p>
         </div>
       </div>
 
-      {/* ===================================================
-          02. MATERNITY & KIDS GALLERY
-          - WHITE background with premium photo borders
-          - Caption/text underneath every photo
-          =================================================== */}
-      <div className="bg-[#ffffff] text-[#111111] py-24 md:py-36 px-6 sm:px-8 md:px-12">
+      {/* 2. व्हाइट बैकग्राउंड पर 4-कॉलम फ़ोटो ग्रिड (Pre-Wedding जैसा सेम लेआउट) */}
+      <section className="bg-white text-black py-16 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 md:mb-24">
-            <span className="text-xs tracking-[0.35em] uppercase text-[#777777] font-semibold block mb-2">
-              PRECIOUS HEIRLOOMS
-            </span>
-            <h3 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#111111] font-light tracking-tight">
-              A New Beginning
+          {/* सब-हेडर */}
+          <div className="flex items-center space-x-3 mb-10">
+            <span className="w-8 h-[1px] bg-black/60"></span>
+            <h3 className="text-xs sm:text-sm tracking-[0.25em] uppercase font-medium text-black/80">
+              LATEST MATERNITY & KIDS
             </h3>
-            <div className="w-16 h-[1.5px] bg-[#c5a059] mx-auto mt-4" />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
-            {familyPhotos.map((photo) => {
-              const captionText = photo.caption || photo.title || 'THE SACRED GIFT OF LIFE';
-              return (
-                <div
-                  key={photo.id}
-                  className="group flex flex-col"
-                >
-                  {/* Framed Photo */}
-                  <div
-                    onClick={() => setActiveLightboxImg(photo)}
-                    className="relative cursor-pointer p-3 sm:p-4 bg-[#ffffff] border border-[#e2e2e2] shadow-sm hover:shadow-xl transition-all duration-500 group-hover:border-[#c5a059]"
-                  >
-                    <div className="relative aspect-[4/5] overflow-hidden bg-[#f3f3f3]">
-                      <img
-                        src={photo.image_url}
-                        alt={photo.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span className="px-4 py-2 bg-[#111111]/90 text-white text-xs tracking-[0.2em] uppercase font-medium flex items-center space-x-2 backdrop-blur-sm">
-                          <Eye className="w-3.5 h-3.5 text-[#c5a059]" />
-                          <span>ENLARGE</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Caption/Title Underneath Photo */}
-                  <div className="mt-4 text-center sm:text-left">
-                    <span className="text-[10px] tracking-[0.3em] uppercase text-[#777777] font-medium block mb-1">
-                      {photo.category}
-                    </span>
-                    <h4 className="font-serif text-xl sm:text-2xl text-[#111111] font-normal tracking-wide">
-                      {photo.title}
-                    </h4>
-                    <div className="py-2 my-2 border-y border-[#eeeeee]">
-                      <p className="font-serif italic text-sm text-[#444444] tracking-wide">
-                        "{captionText}"
-                      </p>
-                    </div>
-                  </div>
+          {/* 4-कॉलम ग्रिड */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {displayPhotos.slice(0, 8).map((photo: any) => (
+              <div
+                key={photo.id}
+                onClick={() => onOpenPhotoFullscreen(photo)}
+                className="group cursor-pointer flex flex-col items-center select-none"
+              >
+                <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-100 shadow-sm">
+                  <img
+                    src={photo.image_url}
+                    alt={photo.title || 'Maternity'}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
                 </div>
-              );
-            })}
+
+                {/* सिर्फ 1 बोल्ड लाइन टाइटल */}
+                <div className="mt-4 text-center">
+                  <h4 className="text-[11px] sm:text-xs font-serif font-bold uppercase tracking-[0.2em] text-black/90 group-hover:text-[#b38a22] transition-colors">
+                    {photo.title || 'SACRED MOMENTS'}
+                  </h4>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-16 text-center">
+          {/* एक्सप्लोर मोर बटन */}
+          <div className="mt-14 flex justify-center">
             <button
               onClick={onBookDate}
-              id="maternity-inquire-btn"
-              className="inline-flex items-center space-x-3 px-8 sm:px-10 py-3.5 bg-[#111111] hover:bg-[#c5a059] text-white hover:text-[#111111] text-xs tracking-[0.3em] uppercase font-medium transition-all duration-300 shadow-sm"
+              className="px-8 py-3 border border-black/30 hover:border-black text-[10px] tracking-[0.25em] uppercase font-semibold text-black transition-all hover:bg-black hover:text-white"
             >
-              <span>INQUIRE FOR MATERNITY & KIDS PORTRAITS</span>
-              <span>→</span>
+              EXPLORE MORE →
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Lightbox */}
-      {activeLightboxImg && (
-        <div
-          onClick={() => setActiveLightboxImg(null)}
-          className="fixed inset-0 z-50 bg-black/98 flex items-center justify-center p-4 cursor-zoom-out"
-        >
-          <div className="relative max-h-[92vh] max-w-[95vw] flex flex-col items-center">
-            <img
-              src={activeLightboxImg.image_url}
-              alt={activeLightboxImg.title}
-              className="max-h-[82vh] max-w-[95vw] object-contain shadow-2xl"
-            />
-            <div className="mt-4 text-center text-white">
-              <h3 className="font-serif text-xl">{activeLightboxImg.title}</h3>
-              <p className="font-serif italic text-white/70 text-sm mt-1">
-                "{activeLightboxImg.caption || activeLightboxImg.title}"
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setActiveLightboxImg(null)}
-            className="absolute top-6 right-6 text-white/80 hover:text-white p-2"
-          >
-            <X className="w-8 h-8" />
-          </button>
-        </div>
-      )}
-    </section>
+      </section>
+    </div>
   );
 };
