@@ -37,34 +37,37 @@ import {
   initialHeroImages
 } from './data/defaultData';
 
-// Ramsnehi Style Full-Screen Cinematic Divider Banner
+// =========================================================================
+// Ramsnehi Style: Elegant Cursive Full-Screen Cinematic Banner
+// =========================================================================
 const SectionBanner: React.FC<{
   id: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   bgImage: string;
 }> = ({ id, title, subtitle, bgImage }) => (
   <div
     id={id}
-    className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black select-none"
+    className="relative w-full h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden bg-black select-none"
   >
     <img
       src={bgImage}
       alt={title}
-      className="absolute inset-0 w-full h-full object-cover brightness-[0.4] contrast-[1.1] animate-ken-burns"
+      className="absolute inset-0 w-full h-full object-cover brightness-[0.5] contrast-[1.08] scale-105 transition-transform duration-1000"
     />
     <div className="relative z-10 text-center px-4 flex flex-col items-center">
-      <p className="text-[10px] sm:text-xs md:text-sm tracking-[0.45em] uppercase text-white/80 font-light mb-4">
-        {subtitle}
-      </p>
-      <h2 className="text-5xl sm:text-7xl md:text-8xl font-serif text-white tracking-[0.25em] uppercase drop-shadow-2xl mb-6">
-        {title}
+      {subtitle && (
+        <span className="text-[10px] sm:text-xs tracking-[0.35em] text-[#d4af37] uppercase font-mono mb-3">
+          {subtitle}
+        </span>
+      )}
+      <h2 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-serif italic text-white tracking-wide capitalize drop-shadow-2xl mb-4">
+        {title.toLowerCase()}
       </h2>
-      <div className="w-16 h-[1px] bg-[#d4af37] mb-6 opacity-75"></div>
-      <p className="text-[9px] sm:text-[10px] tracking-[0.35em] uppercase text-gray-300 font-light">
+      <p className="text-[9px] sm:text-[10px] tracking-[0.4em] uppercase text-white/80 font-light">
         SCROLL TO EXPLORE
       </p>
-      <div className="w-[1px] h-8 bg-white/40 mt-4 animate-bounce"></div>
+      <div className="w-[1px] h-8 bg-white/40 mt-6 animate-bounce"></div>
     </div>
   </div>
 );
@@ -79,7 +82,7 @@ function App() {
   const [films, setFilms] = useState<WeddingFilm[]>(initialFilms);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
 
-  // ऑथेंटिकेशन स्टेट
+  // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -258,10 +261,10 @@ function App() {
 
         <FounderSection founder={founder} onBookDate={handleOpenBooking} />
 
-        {/* 1. STORIES BANNER */}
+        {/* 1. WEDDING STORIES BANNER & GALLERY */}
         <SectionBanner
           id="stories"
-          title="STORIES"
+          title="Stories"
           subtitle="THE MOMENTS THAT BECOME MEMORIES"
           bgImage={stories[0]?.cover_image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80'}
         />
@@ -271,11 +274,11 @@ function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 2. WEDDING BANNER */}
+        {/* 2. WEDDINGS BANNER & GALLERY */}
         <SectionBanner
           id="weddings"
-          title="WEDDING"
-          subtitle="THE MOMENTS THAT BECOME MEMORIES"
+          title="Wedding"
+          subtitle="FOREVER CAPTURED IN ELEGANCE"
           bgImage={photos[0]?.image_url || 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=2000&q=80'}
         />
         <WeddingsGallery
@@ -283,10 +286,10 @@ function App() {
           onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
         />
 
-        {/* 3. PRE-WEDDING BANNER */}
+        {/* 3. PRE-WEDDINGS BANNER & GALLERY */}
         <SectionBanner
           id="preweddings"
-          title="PRE-WEDDING"
+          title="Pre-wedding"
           subtitle="WHERE EVERY LOVE STORY FINDS ITS RHYTHM"
           bgImage={preweddings[0]?.cover_image || 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=2000&q=80'}
         />
@@ -297,21 +300,30 @@ function App() {
           onBookDate={handleOpenBooking}
         />
 
-        {/* 4. FILMS BANNER */}
+        {/* 4. CINEMATIC FILMS BANNER & VIDEOS */}
         <SectionBanner
           id="films"
-          title="FILMS"
+          title="Films"
           subtitle="REAL MOMENTS. CINEMATIC STORIES."
-          bgImage={films[0]?.thumbnail_url || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80'}
+          bgImage={films[0]?.cover_image || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2000&q=80'}
         />
         <WeddingFilms films={films} />
 
-        {settings?.maternityKidsEnabled && (
-          <MaternityKids
-            photos={photos}
-            onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
-            onBookDate={handleOpenBooking}
-          />
+        {/* 5. MATERNITY & KIDS BANNER & PHOTOS */}
+        {settings?.maternityKidsEnabled !== false && (
+          <>
+            <SectionBanner
+              id="maternity"
+              title="Maternity & Kids"
+              subtitle="THE SACRED CHAPTERS OF LIFE"
+              bgImage="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=2000&q=85"
+            />
+            <MaternityKids
+              photos={photos}
+              onOpenPhotoFullscreen={(p) => setActivePhotoLightbox(p)}
+              onBookDate={handleOpenBooking}
+            />
+          </>
         )}
 
         <InstagramSection settings={settings} />
